@@ -67,6 +67,18 @@ class PIDConcept(object):
         ).filter(*filter_cond)
 
     @property
+    def exists(self):
+        """Determine if a PID Concept exists.
+
+        Determine if constructed API object describes an existing PID Concept.
+        The definition of that will vary across different PID Concepts, but
+        it's intended use is to check if given child/parent PIDs are in
+        the described relation.
+        """
+
+        return bool(self.relation)
+
+    @property
     def is_ordered(self):
         """Determine if the concept is an ordered concept."""
         return all(val is not None for val in self.children.with_entities(

@@ -110,6 +110,10 @@ class PIDVersioning(PIDConceptOrdered):
             self.parent.redirect(self.child)
 
     @property
+    def exists(self):
+        return self.parent is not None
+
+    @property
     def last_child(self):
         """
         Get the latest PID as pointed by the Head PID.
