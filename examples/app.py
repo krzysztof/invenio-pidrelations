@@ -61,6 +61,7 @@ from flask_babelex import Babel
 from invenio_db import InvenioDB, db
 from invenio_indexer import InvenioIndexer
 from invenio_pidstore import InvenioPIDStore
+from invenio_pidstore.models import PersistentIdentifier, PIDStatus
 from invenio_pidstore.providers.recordid import RecordIdProvider
 from invenio_pidstore.resolver import Resolver
 from invenio_records import InvenioRecords
@@ -69,10 +70,13 @@ from marshmallow import Schema, fields
 
 from invenio_pidrelations import InvenioPIDRelations
 from invenio_pidrelations.contrib.records import versioned_minter
-from invenio_pidrelations.contrib.versioning import PIDVersioning
+from invenio_pidrelations.contrib.versioning import PIDVersioning, \
+    versioning_blueprint
+from invenio_pidrelations.models import PIDRelation
+from invenio_pidrelations.utils import resolve_relation_type_config
+
 from invenio_pidrelations.serializers.schemas import PIDRelationsMixin, \
-    RelationsSchema
-from invenio_pidrelations.views import blueprint as pidrelations_blueprint
+    RelationSchema
 
 # Create Flask application
 app = Flask(__name__, template_folder='.')
@@ -81,7 +85,7 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 InvenioDB(app)
 InvenioPIDStore(app)
 InvenioPIDRelations(app)
-app.register_blueprint(pidrelations_blueprint)
+app.register_blueprint(versioning_blueprint)
 InvenioIndexer(app)
 InvenioRecords(app)
 
@@ -100,7 +104,8 @@ class SimpleRecordSchema(Schema, PIDRelationsMixin):
 
 @app.route('/')
 def index():
-    heads = PIDVersioning.parents
+    relation_id = resolve_relation_type_config('version').id
+    heads = PersistentIdentifier.query.join(PIDRelation, PIDRelation.parent_id == PersistentIdentifier.id).filter(PIDRelation.relation_type == relation_id).distinct()
     return render_template('index.html', heads=heads)
 
 
@@ -112,27 +117,40 @@ def create():
 
 @app.template_filter()
 def to_record(pid):
-    return SimpleRecordSchema().dump(record_resolver.resolve(pid.pid_value)[1])
+    schema = SimpleRecordSchema()
+    schema.context = dict(pid=pid)
+    rec = schema.dump(record_resolver.resolve(pid.pid_value)[1])
+    return rec.data
 
 
 def create_simple_record(data):
-
     # Create the record and mint a PID
-    data, errors = SimpleRecordSchema().load(data)
+    metadata, errors = SimpleRecordSchema().load(data)
     parent = data.get('parent')
     if parent != 'new':
-        data['_relations'] = {'version': {'parent': parent}}
-    rec = Record.create(data)
-    rec.commit()
+        metadata['conceptrecid'] = parent
+
+    rec = Record.create(metadata)
 
     # The `invenio_pidrelations.contrib.records.versioned_minter` will take
     # care of creating the necessary PIDRelation entries.
-    record_minter(rec.id, rec)
+    pid = record_minter(rec.id, rec)
     db.session.commit()
 
 
-@versioned_minter(pid_type='recid')
 def record_minter(record_uuid, data):
+    parent = data.get('conceptrecid')
+    if not parent:
+        parent_pid = RecordIdProvider.create(object_type='rec',
+                                             object_uuid=None,
+                                             status=PIDStatus.REGISTERED).pid
+        data['conceptrecid'] = parent_pid.pid_value
+    else:
+        parent_pid = PersistentIdentifier.get(
+            pid_type=RecordIdProvider.pid_type, pid_value=parent)
     provider = RecordIdProvider.create('rec', record_uuid)
     data['recid'] = provider.pid.pid_value
+
+    versioning = PIDVersioning(parent=parent_pid)
+    versioning.insert_child(child=provider.pid)
     return provider.pid

@@ -25,6 +25,7 @@
 
 {# {%- from "invenio_pidrelations/macros/pid_versions.html" import pid_versions_dropdown -%} #}
 <!DOCTYPE html>
+{%- from "invenio_pidrelations/macros/pid_versions.html" import pid_versions_dropdown -%}
 <html>
 <head>
 <title>PIDRelations Example Application</title>
@@ -70,9 +71,10 @@ body {
         {% for head in heads %}
           <li>[{{ head.pid_value }}]
             <ul>
-            {% for child in head | all_versions %}
+            {% set head_version = head | to_versioning_api(child=False) %}
+            {% for child in head_version.children %}
               {% set record = child | to_record %}
-              <li>[{{ child.pid_value }}] - {{ record.title }} <br/> <small>{{ record.body }}</small></li>
+              <li>[{{ child.pid_value }}] - {{ record['title'] }} <br/> <small>{{ record['body'] }}</small></li>
             {% endfor %}
             </ul>
           </li>
@@ -98,9 +100,9 @@ body {
         <select name="parent">
           <option value="new" selected>New head</option>
           {% for head in heads %}
-            {% set latest_record = head | latest_pid_version %}
-            <option value="{{ head.pid_value }}">{{ head.pid_value }} (from [{{ latest_record.pid_value }}])</option>
-            }
+            {% set head_version = head | to_versioning_api(child=False) %}
+            {% set last_record = head_version.last_child %}
+            <option value="{{ head.pid_value }}">{{ head.pid_value }} (from [{{ last_record.pid_value }}])</option>
           {% endfor %}
         </select>
       </div>
