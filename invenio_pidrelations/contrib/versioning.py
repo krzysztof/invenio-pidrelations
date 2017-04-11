@@ -171,25 +171,6 @@ versioning_blueprint = Blueprint(
 
 
 @versioning_blueprint.app_template_filter()
-def pid_version_parent(child):
-    """Get head PID of a PID."""
-    return PIDVersioning(child=child).parent
-
-
-@versioning_blueprint.app_template_test()
-def latest_version(child_pid=None, parent_pid=None):
-    """Determine if PID is the last version."""
-    assert child_pid or parent_pid
-    return PIDVersioning(child=child_pid, parent=parent_pid).last_child
-
-
-@versioning_blueprint.app_template_filter()
-def pid_versions(pid):
-    """Get all versions of a PID."""
-    return PIDVersioning(child=pid).children
-
-
-@versioning_blueprint.app_template_filter()
 def to_versioning_api(pid, child=True):
     """Get PIDVersioning object."""
     return PIDVersioning(
