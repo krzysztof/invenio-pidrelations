@@ -110,6 +110,10 @@ class PIDVersioning(PIDConceptOrdered):
             self.parent.redirect(self.child)
 
     @property
+    def exists(self):
+        return self.parent is not None
+
+    @property
     def last_child(self):
         """
         Get the latest PID as pointed by the Head PID.
@@ -173,10 +177,11 @@ versioning_blueprint = Blueprint(
 @versioning_blueprint.app_template_filter()
 def to_versioning_api(pid, child=True):
     """Get PIDVersioning object."""
-    return PIDVersioning(
+    pv = PIDVersioning(
         child=pid if child else None,
         parent=pid if not child else None
     )
+    return pv
 
 
 __all__ = (

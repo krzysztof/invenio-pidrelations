@@ -67,6 +67,10 @@ class PIDConcept(object):
         ).filter(*filter_cond)
 
     @property
+    def exists(self):
+        return bool(self.relation)
+
+    @property
     def is_ordered(self):
         """Determine if the concept is an ordered concept."""
         return all(val is not None for val in self.children.with_entities(
