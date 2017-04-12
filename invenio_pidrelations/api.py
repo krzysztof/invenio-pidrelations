@@ -49,11 +49,13 @@ class PIDConcept(object):
             self.child = child
             self.parent = parent
             self.relation_type = relation_type
-            # TODO:
-            # if all(v is not None for v in (child, parent, relation_type)):
-            #    self.relation = PIDRelation.query.get(...)
-            # NOTE: Do not query.filter(...) with partial information
-            # as you might guess wrong if the relation does not exist
+            # If child and parent (primary keys) are not None,
+            # try to set the relation
+            if child and parent:
+                self.relation = PIDRelation.query.get(
+                    (self.parent.id, self.child.id))
+            else:
+                self.relation = None
 
     @property
     def parents(self):

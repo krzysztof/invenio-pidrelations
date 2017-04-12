@@ -33,7 +33,6 @@ from invenio_records_files.models import RecordsBuckets
 
 from ..api import PIDConcept
 from ..contrib.versioning import PIDVersioning
-from ..proxies import current_pidrelations
 from ..utils import resolve_relation_type_config
 
 
@@ -107,9 +106,18 @@ class RecordDraft(PIDConcept):
                                  'version relation.'.format(relation))
             super(RecordDraft, self).__init__(relation=relation)
         else:
+            # RecordDraft is composed of a one parent-child pair, hence we can
+            # determine the child from the parent
+            self.parent = parent
+            self.child = child
+            if parent:
+                self.child = self.children.one_or_none()
+            if child:
+                self.parent = self.parents.one_or_none()
+            # Run the parent class constructor in attempt to set the relation
             super(RecordDraft, self).__init__(
-                child=child, parent=parent, relation_type=self.relation_type,
-                relation=relation)
+                child=self.child, parent=self.parent,
+                relation_type=self.relation_type, relation=relation)
 
     @classmethod
     def link(cls, recid, depid):
@@ -132,12 +140,20 @@ class RecordDraft(PIDConcept):
     @classmethod
     def get_draft(cls, recid):
         """Get the draft of a record."""
-        return cls(parent=recid).children.one_or_none()
+        api = cls(parent=recid)
+        if api.exists:
+            return api.children.one_or_none()
+        else:
+            return None
 
     @classmethod
     def get_recid(cls, depid):
         """Get the recid of a record."""
-        return cls(child=depid).parent
+        api = cls(child=depid)
+        if api.exists:
+            return api.parent
+        else:
+            return None
 
 
 def get_latest_draft(recid_pid):

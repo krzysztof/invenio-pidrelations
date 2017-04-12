@@ -132,13 +132,19 @@ class PIDVersioning(PIDConceptOrdered):
         """Get the last non-registered child"""
         return self.get_children(ordered=False).filter(
                 PIDRelation.index.isnot(None),
-                PersistentIdentifier.status != PIDStatus.REGISTERED).order_by(
+                PersistentIdentifier.status == PIDStatus.RESERVED).order_by(
                     PIDRelation.index.desc()).one_or_none()
 
     @property
     def draft_child_deposit(self):
+        """Get the deposit of the draft child.
+
+        Return `None` if no new-version deposit exists."""
         from invenio_pidrelations.contrib.records import RecordDraft
-        return RecordDraft.get_draft(self.draft_child)
+        if self.draft_child:
+            return RecordDraft.get_draft(self.draft_child)
+        else:
+            return None
 
     def insert_draft_child(self, child):
         if not self.draft_child:
