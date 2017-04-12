@@ -83,8 +83,7 @@ class PIDConcept(object):
     @property
     def is_ordered(self):
         """Determine if the concept is an ordered concept."""
-        return all(val is not None for val in self.children.with_entities(
-            PIDRelation.index))
+        return False
 
     @property
     def has_parents(self):
@@ -140,7 +139,7 @@ class PIDConcept(object):
     @property
     def children(self):
         """Children of the parent."""
-        return self.get_children()
+        return self.get_children(ordered=self.is_ordered)
 
     @property
     def has_children(self):
@@ -252,21 +251,6 @@ class PIDConcept(object):
         # TODO: mark 'children' cached_property as dirty
 
 
-class PIDConceptOrdered(PIDConcept):
-    """Standard PID Concept with childred ordering."""
-
-    @property
-    def children(self):
-        """Overwrite the children property to always return them ordered."""
-        return self.get_children(ordered=True)
-
-    @property
-    def is_ordered(self):
-        """Determine if the concept is an ordered concept."""
-        return True
-
-
 __all__ = (
     'PIDConcept',
-    'PIDConceptOrdered',
 )

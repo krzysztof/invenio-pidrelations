@@ -30,12 +30,12 @@ from flask import current_app, Blueprint
 from invenio_db import db
 from invenio_pidstore.models import PersistentIdentifier, PIDStatus
 
-from ..api import PIDConceptOrdered
+from ..api import PIDConcept
 from ..models import PIDRelation
 from ..utils import resolve_relation_type_config
 
 
-class PIDVersioning(PIDConceptOrdered):
+class PIDVersioning(PIDConcept):
     """API for PID versioning relations.
 
     - Adds automatic redirection handling for Parent-LastChild
@@ -171,6 +171,11 @@ class PIDVersioning(PIDConceptOrdered):
     def children(self):
         """Children of the parent."""
         return self.get_children(pid_status=PIDStatus.REGISTERED, ordered=True)
+
+    @property
+    def is_ordered(self):
+        """Determine if the concept is an ordered concept."""
+        return True
 
 
 versioning_blueprint = Blueprint(
