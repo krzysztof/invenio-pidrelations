@@ -183,7 +183,7 @@ def clone_record_files(src_record, dst_record):
 def index_siblings(pid, siblings=None, only_neighbors=False,
                    with_deposits=True):
     """Send sibling records of the passed pid for indexing."""
-    if not siblings:
+    if siblings is None:
         siblings = (PIDVersioning(child=pid).children.all())
 
     index_pids = siblings
