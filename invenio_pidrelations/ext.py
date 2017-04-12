@@ -72,10 +72,11 @@ class InvenioPIDRelations(object):
         # app.register_blueprint(blueprint)
         app.extensions['invenio-pidrelations'] = _InvenioPIDRelationsState(app)
 
+        # TODO: Do not register this indexed by default
         # Register indexers if they are required
-        if app.config.get('PIDRELATIONS_INDEX_RELATIONS'):
-            from invenio_indexer.signals import before_record_index
-            before_record_index.connect(index_relations, sender=app)
+        # if app.config.get('PIDRELATIONS_INDEX_RELATIONS'):
+        #     from invenio_indexer.signals import before_record_index
+        #     before_record_index.connect(index_relations, sender=app)
 
     def init_config(self, app):
         """Initialize configuration."""

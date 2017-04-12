@@ -30,6 +30,7 @@ from invenio_indexer.api import RecordIndexer
 from invenio_pidstore.models import PersistentIdentifier, PIDStatus, \
     RecordIdentifier
 from invenio_records_files.models import RecordsBuckets
+from invenio_records.api import Record
 
 from ..api import PIDConcept
 from ..contrib.versioning import PIDVersioning
@@ -179,17 +180,27 @@ def clone_record_files(src_record, dst_record):
     dst_record['_buckets'] = {'deposit': str(snapshot.id)}
 
 
-def index_siblings(pid, only_neighbors=False):
+def index_siblings(pid, siblings=None, only_neighbors=False,
+                   with_deposits=True):
     """Send sibling records of the passed pid for indexing."""
-    siblings = (PIDVersioning(child=pid).children.all())
+    if not siblings:
+        siblings = (PIDVersioning(child=pid).children.all())
 
     index_pids = siblings
     if only_neighbors:
-        pid_index = siblings.index(pid)
-        index_pids = siblings[(pid_index - 1):(pid_index + 2)]
+        if pid in siblings:
+            pid_index = siblings.index(pid)
+            index_pids = siblings[(pid_index - 1): (pid_index + 2)]
+        else:
+            index_pids = siblings[-1:]
     for p in index_pids:
         if p != pid:
             RecordIndexer().index_by_id(str(p.object_uuid))
-
+            rec = Record.get_record(p.object_uuid)
+            if with_deposits:
+                depid = PersistentIdentifier.get(
+                    'depid', rec['_deposit']['id'])
+                RecordIndexer().index_by_id(str(depid.object_uuid))
+    # TODO: pick out what to do lazily and what to index upfront
     # RecordIndexer().bulk_index([str(p.object_uuid)
     #                             for p in index_pids if p != pid])

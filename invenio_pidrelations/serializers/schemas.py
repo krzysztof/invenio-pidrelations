@@ -87,22 +87,18 @@ class RelationSchema(Schema):
 
     def dump_is_last(self, obj):
         """Dump the boolean stating if the child in the relation is last.
+
         Dumps `None` for parent serialization.
         """
         if self._is_child(obj) and obj.is_ordered:
-            # TODO: This method exists in API
-            return obj.children.all()[-1] == self.context['pid']
+            if obj.children.count() > 0:
+                return obj.children.all()[-1] == self.context['pid']
+            elif obj.draft_child:
+                return obj.draft_child == self.context['pid']
+            else:
+                return True
         else:
             return None
-
-    #def dump_is_first(self, obj):
-    #    """Dump the boolean stating if the child in the relation is first.
-    #    Dumps `None` for parent serialization.
-    #    """
-    #    if self._is_child(obj) and obj.is_ordered:
-    #        return obj.children.first() == self.context['pid']
-    #    else:
-    #        return None
 
     def dump_type(self, obj):
         """Dump the text name of the relation."""
