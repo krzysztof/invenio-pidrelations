@@ -61,7 +61,7 @@ class PIDConcept(object):
     def parents(self):
         """Return the PID parents for given relation."""
         filter_cond = [PIDRelation.child_id == self.child.id, ]
-        if self.relation_type:
+        if self.relation_type is not None:
             filter_cond.append(PIDRelation.relation_type == self.relation_type)
         return db.session.query(PersistentIdentifier).join(
             PIDRelation,
@@ -120,7 +120,7 @@ class PIDConcept(object):
         filter_cond = [PIDRelation.parent_id == self.parent.id, ]
         if pid_status is not None:
             filter_cond.append(PersistentIdentifier.status == pid_status)
-        if self.relation_type:
+        if self.relation_type is not None:
             filter_cond.append(PIDRelation.relation_type == self.relation_type)
 
         q = db.session.query(PersistentIdentifier).join(
