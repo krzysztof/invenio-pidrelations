@@ -40,8 +40,9 @@ def serialize_relations(pid):
     for relation in relations:
         rel_cfg = resolve_relation_type_config(relation.relation_type)
         schema_class = rel_cfg.schema
-        schema = schema_class()
-        schema.context['pid'] = pid
-        result, errors = schema.dump(rel_cfg.api(relation=relation))
-        data.setdefault(rel_cfg.name, []).append(result)
+        if schema_class is not None:
+            schema = schema_class()
+            schema.context['pid'] = pid
+            result, errors = schema.dump(rel_cfg.api(relation=relation))
+            data.setdefault(rel_cfg.name, []).append(result)
     return data

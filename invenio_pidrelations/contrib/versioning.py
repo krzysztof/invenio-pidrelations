@@ -85,8 +85,6 @@ class PIDVersioning(PIDConceptOrdered):
         adding a redirection from the parent to the last child.
         """
         # TODO: Add support for removing a single child
-        if self.children.count() == 1:
-            raise Exception("Removing single child is not supported.")
         with db.session.begin_nested():
             super(PIDVersioning, self).remove_child(child, reorder=True)
             if self.last_child is not None:
