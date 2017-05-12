@@ -68,7 +68,8 @@ def test_version_api_edit(app, db, version_pids):
     assert h1.get_redirect() == h1v2
     assert pv.last_child == h1v2
 
-    h1v3 = PersistentIdentifier.create('recid', 'foobar.v3', object_type='rec')
+    h1v3 = PersistentIdentifier.create('recid', 'foobar.v3', object_type='rec',
+                                       status=PIDStatus.REGISTERED)
     pv.insert_child(h1v3)
     assert [h1v1, h1v2, h1v3] == pv.children.all()
     assert h1.get_redirect() == h1v3

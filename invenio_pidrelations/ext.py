@@ -26,10 +26,14 @@
 
 from __future__ import absolute_import, print_function
 
+from copy import deepcopy
+
+from invenio_indexer.signals import before_record_index
 from werkzeug.utils import cached_property
 
-from . import config
-from .indexers import index_relations
+from invenio_pidrelations import config
+from invenio_pidrelations.indexers import index_relations
+from invenio_pidrelations.utils import obj_or_import_string
 
 
 class _InvenioPIDRelationsState(object):
@@ -69,14 +73,11 @@ class InvenioPIDRelations(object):
     def init_app(self, app):
         """Flask application initialization."""
         self.init_config(app)
-        # app.register_blueprint(blueprint)
         app.extensions['invenio-pidrelations'] = _InvenioPIDRelationsState(app)
 
-        # TODO: Do not register this indexed by default
-        # Register indexers if they are required
-        # if app.config.get('PIDRELATIONS_INDEX_RELATIONS'):
-        #     from invenio_indexer.signals import before_record_index
-        #     before_record_index.connect(index_relations, sender=app)
+        # Register indexers the default indexer if necessary
+        if app.config.get('PIDRELATIONS_REGISTER_DEFAULT_INDEXER'):
+            before_record_index.connect(index_relations, sender=app)
 
     def init_config(self, app):
         """Initialize configuration."""

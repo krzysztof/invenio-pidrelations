@@ -27,7 +27,6 @@
 from __future__ import absolute_import, print_function
 
 import pytest
-
 from invenio_pidstore.models import PersistentIdentifier
 
 from invenio_pidrelations.contrib.records import RecordDraft
@@ -65,5 +64,3 @@ def test_record_draft(app, db):
     with pytest.raises(Exception) as excinfo:
         RecordDraft.link(recid=r2, depid=d1)
     assert 'already is a draft of a recid' in str(excinfo.value)
-
-

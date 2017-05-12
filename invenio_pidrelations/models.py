@@ -49,7 +49,8 @@ class PIDRelation(db.Model, Timestamp):
     parent_id = db.Column(
         db.Integer,
         db.ForeignKey(PersistentIdentifier.id, onupdate="CASCADE",
-                      ondelete="CASCADE"),
+                      ondelete="CASCADE",
+                      name='fk_pidrelation_parent_pidstore_pid'),
         nullable=False,
         primary_key=True,
         )
@@ -58,7 +59,8 @@ class PIDRelation(db.Model, Timestamp):
     child_id = db.Column(
         db.Integer,
         db.ForeignKey(PersistentIdentifier.id, onupdate="CASCADE",
-                      ondelete="CASCADE"),
+                      ondelete="CASCADE",
+                      name='fk_pidrelation_parent_pidstore_pid'),
         nullable=False,
         primary_key=True)
     """Child PID of the relation."""
@@ -87,7 +89,7 @@ class PIDRelation(db.Model, Timestamp):
                         cascade='all,delete'))
 
     def __repr__(self):
-        """String representation of a PID relation."""
+        """Text representation of a PID relation."""
         return "<PIDRelation: ({r.parent.pid_type}:{r.parent.pid_value}) -> " \
                "({r.child.pid_type}:{r.child.pid_value}) " \
                "(Type: {r.relation_type}, Idx: {r.index})>".format(r=self)
@@ -112,9 +114,6 @@ class PIDRelation(db.Model, Timestamp):
                           relation_type=relation_type,
                           index=index)
                 db.session.add(obj)
-                # logger.info("Created PIDRelation {obj.parent_pid_id} -> "
-                #             "{obj.child_id} ({obj.relation_type}, "
-                #             "index:{obj.index})".format(obj=obj))
         except IntegrityError:
             raise Exception("PID Relation already exists.")
             # msg = "PIDRelation already exists: " \

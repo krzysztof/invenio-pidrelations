@@ -31,6 +31,7 @@ import shutil
 import tempfile
 
 import pytest
+from elasticsearch.exceptions import RequestError
 from flask import Flask
 from flask_babelex import Babel
 from invenio_db import db as db_
@@ -72,8 +73,8 @@ def base_app(instance_path):
         TESTING=True,
     )
     InvenioPIDStore(app_)
-    InvenioPIDRelations(app_)
     InvenioDB(app_)
+    InvenioPIDRelations(app_)
     InvenioRecords(app_)
     InvenioIndexer(app_)
     InvenioSearch(app_)
@@ -86,6 +87,19 @@ def app(base_app):
     """Flask application fixture."""
     with base_app.app_context():
         yield base_app
+
+
+@pytest.yield_fixture()
+def es(app):
+    """Provide elasticsearch access."""
+    try:
+        list(current_search.create())
+    except RequestError:
+        list(current_search.delete(ignore=[400, 404]))
+        list(current_search.create())
+    current_search_client.indices.refresh()
+    yield current_search_client
+    list(current_search.delete(ignore=[404]))
 
 
 @pytest.yield_fixture()
@@ -197,7 +211,6 @@ def nested_pids_and_relations(app, db):
                     'index': 2,
                     'previous': {'pid_type': 'recid', 'pid_value': '3'},
                     'next': None,
-                    'is_first': False,
                     'is_last': True,
                     'is_ordered': True,
                     'is_parent': False,
@@ -214,7 +227,6 @@ def nested_pids_and_relations(app, db):
                     'index': 1,
                     'previous': {'pid_type': 'recid', 'pid_value': '6'},
                     'next': {'pid_type': 'recid', 'pid_value': '7'},
-                    'is_first': False,
                     'is_last': False,
                     'is_ordered': True,
                     'is_parent': False,
@@ -228,7 +240,6 @@ def nested_pids_and_relations(app, db):
                     'index': None,
                     'previous': None,
                     'next': None,
-                    'is_first': None,
                     'is_last': None,
                     'is_ordered': True,
                     'is_parent': True,
@@ -244,7 +255,6 @@ def nested_pids_and_relations(app, db):
                     'index': None,
                     'previous': None,
                     'next': None,
-                    'is_first': True,
                     'is_last': False,
                     'is_ordered': True,
                     'is_parent': False,
@@ -294,12 +304,16 @@ def custom_relation_schema(app):
 @pytest.fixture()
 def version_pids(app, db):
     """Versioned PIDs fixture with one parent and two versions."""
-    h1v1 = PersistentIdentifier.create('recid', 'foobar.v1', object_type='rec')
-    h1v2 = PersistentIdentifier.create('recid', 'foobar.v2', object_type='rec')
-    pv = PIDVersioning(child=h1v1)
-    pv.create_parent('foobar')
+    h1 = PersistentIdentifier.create('recid', 'foobar', object_type='rec',
+                                     status=PIDStatus.REGISTERED)
+    h1v1 = PersistentIdentifier.create('recid', 'foobar.v1', object_type='rec',
+                                       status=PIDStatus.REGISTERED)
+    h1v2 = PersistentIdentifier.create('recid', 'foobar.v2', object_type='rec',
+                                       status=PIDStatus.REGISTERED)
+    pv = PIDVersioning(parent=h1)
+    pv.insert_child(h1v1)
     pv.insert_child(h1v2)
-    h1 = pv.parent
+    db.session.commit()
     return {
         'h1': h1,
         'h1v1': h1v1,
@@ -332,16 +346,16 @@ def records(pids, db):
 
 
 @pytest.fixture()
-def indexed_records(records):
+def indexed_records(es, records):
     """Fixture for the records, which are already indexed."""
-    current_search_client.indices.flush('*')
-    # delete all elasticsearch indices and recreate them
-    for deleted in current_search.delete(ignore=[404]):
-        pass
-    for created in current_search.create(None):
-        pass
+    # es.indices.flush('*')
+    # # delete all elasticsearch indices and recreate them
+    # for deleted in current_search.delete(ignore=[404]):
+    #     pass
+    # for created in current_search.create(None):
+    #     pass
     # flush the indices so that indexed records are searchable
     for pid_name, record in records.items():
         RecordIndexer().index(record)
-    current_search_client.indices.flush('*')
+    es.indices.flush('*')
     return records

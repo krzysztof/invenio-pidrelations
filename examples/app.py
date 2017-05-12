@@ -57,7 +57,6 @@ To reset the example application run:
 from __future__ import absolute_import, print_function
 
 from flask import Flask, redirect, render_template, request, url_for
-from flask_babelex import Babel
 from invenio_db import InvenioDB, db
 from invenio_indexer import InvenioIndexer
 from invenio_pidstore import InvenioPIDStore
@@ -69,14 +68,11 @@ from invenio_records.api import Record
 from marshmallow import Schema, fields
 
 from invenio_pidrelations import InvenioPIDRelations
-from invenio_pidrelations.contrib.records import versioned_minter
 from invenio_pidrelations.contrib.versioning import PIDVersioning, \
     versioning_blueprint
 from invenio_pidrelations.models import PIDRelation
+from invenio_pidrelations.serializers.schemas import PIDRelationsMixin
 from invenio_pidrelations.utils import resolve_relation_type_config
-
-from invenio_pidrelations.serializers.schemas import PIDRelationsMixin, \
-    RelationSchema
 
 # Create Flask application
 app = Flask(__name__, template_folder='.')
@@ -105,7 +101,14 @@ class SimpleRecordSchema(Schema, PIDRelationsMixin):
 @app.route('/')
 def index():
     relation_id = resolve_relation_type_config('version').id
-    heads = PersistentIdentifier.query.join(PIDRelation, PIDRelation.parent_id == PersistentIdentifier.id).filter(PIDRelation.relation_type == relation_id).distinct()
+    heads = (
+        PersistentIdentifier.query
+        .join(
+            PIDRelation,
+            PIDRelation.parent_id == PersistentIdentifier.id)
+        .filter(
+            PIDRelation.relation_type == relation_id)
+        .distinct())
     return render_template('index.html', heads=heads)
 
 
@@ -132,9 +135,7 @@ def create_simple_record(data):
 
     rec = Record.create(metadata)
 
-    # The `invenio_pidrelations.contrib.records.versioned_minter` will take
-    # care of creating the necessary PIDRelation entries.
-    pid = record_minter(rec.id, rec)
+    record_minter(rec.id, rec)
     db.session.commit()
 
 

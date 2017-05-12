@@ -26,8 +26,9 @@
 
 from marshmallow import Schema
 
-from invenio_pidrelations.serializers.schemas import RelationSchema, PIDRelationsMixin
 from invenio_pidrelations.models import PIDRelation
+from invenio_pidrelations.serializers.schemas import PIDRelationsMixin, \
+    RelationSchema
 
 
 class SampleRecordSchema(Schema, PIDRelationsMixin):
@@ -37,7 +38,7 @@ class SampleRecordSchema(Schema, PIDRelationsMixin):
 
 def test_schema(app, nested_pids_and_relations):
     """Test the marshmallow schema serialization."""
-    schema = MyRecordSchema(strict=True)
+    schema = SampleRecordSchema(strict=True)
 
     pids, exp_relations = nested_pids_and_relations
     for p_idx in exp_relations.keys():
@@ -53,7 +54,7 @@ def test_schema(app, nested_pids_and_relations):
 
 def test_custom_schema(app, nested_pids_and_relations, custom_relation_schema):
     """Test the marshmallow schema serialization with custom schema."""
-    schema = MyRecordSchema(strict=True)
+    schema = SampleRecordSchema(strict=True)
     pids, exp_relations = nested_pids_and_relations
 
     pid = pids[4]

@@ -24,64 +24,13 @@
 
 """Records integration for PIDRelations."""
 
-from functools import wraps
-
 from invenio_indexer.api import RecordIndexer
-from invenio_pidstore.models import PersistentIdentifier, PIDStatus, \
-    RecordIdentifier
-from invenio_records_files.models import RecordsBuckets
+from invenio_pidstore.models import PersistentIdentifier
 from invenio_records.api import Record
 
 from ..api import PIDConcept
 from ..contrib.versioning import PIDVersioning
 from ..utils import resolve_relation_type_config
-
-
-## TODO: To be removed, done manually in minters
-def default_parent_minter(record_uuid, data, pid_type, object_type):
-    """Basic RecordIdentifier-based minter for parent PIDs."""
-    parent_id = RecordIdentifier.next()
-    return PersistentIdentifier.create(
-        pid_type=pid_type,
-        pid_value=str(parent_id),
-        object_type=object_type,
-        status=PIDStatus.REGISTERED,
-    )
-
-
-## TODO: To be removed, done manually in minters
-def versioned_minter(pid_type='recid', object_type='rec', parent_minter=None):
-    """Parameterized minter decorator for automatic versioning.
-
-    This decorator can be applied to any minter function. in order to introduce
-    record versioning through the `relations` metadata key.
-    """
-    parent_minter = parent_minter or default_parent_minter
-
-    def decorator(child_minter):
-        @wraps(child_minter)
-        def wrapper(record_uuid=None, data=None):
-            parent = (data.get('relations', {}).get('version', {})
-                      .get('parent'))
-            if not parent:
-                # Not yet versioned, create parent PID
-                parent_pid = parent_minter(record_uuid, data, pid_type,
-                                           object_type)
-                data['relations'] = {
-                    'version': {'parent': parent_pid.pid_value}
-                }
-            else:
-                parent_pid = PersistentIdentifier.get(
-                    pid_type=pid_type, pid_value=parent)
-
-            # Call the decorated minter to get the new PID
-            pid = child_minter(record_uuid, data)
-
-            versioning = PIDVersioning(parent=parent_pid)
-            versioning.insert_child(child=pid)
-            return pid
-        return wrapper
-    return decorator
 
 
 class RecordDraft(PIDConcept):
@@ -100,6 +49,7 @@ class RecordDraft(PIDConcept):
     """
 
     def __init__(self, child=None, parent=None, relation=None):
+        """Create a record draft relation."""
         self.relation_type = resolve_relation_type_config('record_draft').id
         if relation is not None:
             if relation.relation_type != self.relation_type:
@@ -165,19 +115,6 @@ def get_latest_draft(recid_pid):
     else:
         last_deposit = None
     return pv.last_child, last_deposit
-
-
-## TODO: To be removed
-def clone_record_files(src_record, dst_record):
-    """Create copy a record's files."""
-    # NOTE `Bucket.snapshot` doesn't set `locked`
-    snapshot = src_record.files.bucket.snapshot(lock=False)
-    snapshot.locked = False
-
-    RecordsBuckets.create(record=dst_record.model, bucket=snapshot)
-
-    dst_record['_files'] = dst_record.files.dumps()
-    dst_record['_buckets'] = {'deposit': str(snapshot.id)}
 
 
 def index_siblings(pid, children=None, neighbors_eager=False, eager=False,

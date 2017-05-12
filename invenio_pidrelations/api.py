@@ -31,7 +31,6 @@ from invenio_pidstore.models import PersistentIdentifier
 from sqlalchemy.exc import IntegrityError
 
 from .models import PIDRelation
-from .utils import resolve_relation_type_config
 
 
 class PIDConcept(object):
@@ -77,7 +76,6 @@ class PIDConcept(object):
         it's intended use is to check if given child/parent PIDs are in
         the described relation.
         """
-
         return bool(self.relation)
 
     @property
@@ -229,8 +227,6 @@ class PIDConcept(object):
                 else:
                     relation_obj = PIDRelation.create(
                         self.parent, child, self.relation_type, None)
-            # TODO: self.child = child
-            # TODO: mark 'children' cached_property as dirty
         except IntegrityError:
             raise Exception("PID Relation already exists.")
 
@@ -248,8 +244,6 @@ class PIDConcept(object):
                         PIDRelation.index).all()
                 for idx, c in enumerate(child_relations):
                     c.index = idx
-        # TODO: self.child = None
-        # TODO: mark 'children' cached_property as dirty
 
 
 class PIDConceptOrdered(PIDConcept):

@@ -48,7 +48,6 @@ class RelationSchema(Schema):
     is_parent = fields.Method('_is_parent')
     is_child = fields.Method('_is_child')
     is_last = fields.Method('dump_is_last')
-    # is_first = fields.Method('dump_is_first')
     index = fields.Method('dump_index')
     next = fields.Method('dump_next')
     previous = fields.Method('dump_previous')

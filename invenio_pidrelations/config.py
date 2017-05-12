@@ -44,48 +44,12 @@ PIDRELATIONS_RELATION_TYPES = [
                  'invenio_pidrelations.serializers.schemas.RelationSchema'),
 ]
 
-PIDRELATION_RELATION_TYPE_TITLES = {
-    'ORDERED': 'Ordered',
-    'UNORDERED': 'Unordered',
-    'VERSION': 'Version',
-    'RECORD_DRAFT': 'Record Draft',
-}
-
-PIDRELATIONS_RELATION_TYPES2 = {
-    'ORDERED': 0,
-    'UNORDERED': 1,
-    'VERSION': 2,
-    'RECORD_DRAFT': 3,
-}
-"""Relation types definition."""
-
-PIDRELATIONS_RELATION_TYPES_SERIALIZED_NAMES = \
-    dict((v, k.lower()) for k, v in PIDRELATIONS_RELATION_TYPES2.items())
-"""Serialized names of the relation types."""
-
-# PIDRELATIONS_RELATION_TYPES_SERIALIZED_NAMES = \
-#     dict((v, k.lower()) for k, v in PIDRELATIONS_RELATION_TYPES.items())
-# """Serialized names of the relation types."""
-
-PIDRELATIONS_RELATIONS_API = {
-    0: 'invenio_pidrelations.api:PIDConceptOrdered',
-    1: 'invenio_pidrelations.api:PIDConcept',
-    2: 'invenio_pidrelations.contrib.versioning:PIDVersioning',
-    3: 'invenio_pidrelations.contrib.records:RecordDraft',
-}
 
 PIDRELATIONS_PRIMARY_PID_TYPE = 'recid'
 """Default PID type for relations."""
 
-PIDRELATIONS_INDEX_RELATIONS = True
+PIDRELATIONS_INDEX_RELATIONS = False
 """Enable or disable relations indexing."""
-"""Serialized names of the relation types."""
-
-PIDRELATIONS_RELATIONS_API = {
-    'ORDERED': 'invenio_pidrelations.api:PIDConcept',
-    'UNORDERED': 'invenio_pidrelations.api:PIDConcept',
-    'VERSION': 'invenio_pidrelations.contrib.versioning:PIDVersioning',
-}
 
 PIDRELATIONS_DEFAULT_VALUE = 'foobar'
 """Default value for the application."""

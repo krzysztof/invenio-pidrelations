@@ -26,7 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
-from flask import current_app, Blueprint
+from flask import Blueprint
 from invenio_db import db
 from invenio_pidstore.models import PersistentIdentifier, PIDStatus
 
@@ -67,9 +67,6 @@ class PIDVersioning(PIDConceptOrdered):
 
         Parameter 'index' is has to be an integer.
         """
-        # Impose index as mandatory key
-        # TODO: For linking usecase: check if 'pid' has a parent already,
-        #       if so, raise or remove it first
         if index is None:
             raise ValueError(
                 "Incorrect value for child index: {0}".format(index))
@@ -84,14 +81,10 @@ class PIDVersioning(PIDConceptOrdered):
         Extends the base method call with always reordering after removal and
         adding a redirection from the parent to the last child.
         """
-        # TODO: Add support for removing a single child
         with db.session.begin_nested():
             super(PIDVersioning, self).remove_child(child, reorder=True)
             if self.last_child is not None:
                 self.parent.redirect(self.last_child)
-            # else:
-            #     self.parent.unassign()
-            #     self.parent.delete()  # TODO: Deleting redirection
 
     def create_parent(self, pid_value, status=PIDStatus.REGISTERED,
                       redirect=True):
@@ -109,6 +102,7 @@ class PIDVersioning(PIDConceptOrdered):
 
     @property
     def exists(self):
+        """Check if the PID Versioning exists."""
         return self.parent is not None
 
     @property
@@ -127,7 +121,7 @@ class PIDVersioning(PIDConceptOrdered):
 
     @property
     def draft_child(self):
-        """Get the last non-registered child"""
+        """Get the last non-registered child."""
         return self.get_children(ordered=False).filter(
                 PIDRelation.index.isnot(None),
                 PersistentIdentifier.status == PIDStatus.RESERVED).order_by(
@@ -135,9 +129,11 @@ class PIDVersioning(PIDConceptOrdered):
 
     @property
     def draft_child_deposit(self):
-        """Get the deposit of the draft child.
+        """
+        Get the deposit of the draft child.
 
-        Return `None` if no new-version deposit exists."""
+        Return `None` if no new-version deposit exists.
+        """
         from invenio_pidrelations.contrib.records import RecordDraft
         if self.draft_child:
             return RecordDraft.get_draft(self.draft_child)
@@ -145,6 +141,7 @@ class PIDVersioning(PIDConceptOrdered):
             return None
 
     def insert_draft_child(self, child):
+        """Insert a draft child to versioning."""
         if not self.draft_child:
             with db.session.begin_nested():
                 super(PIDVersioning, self).insert_child(child, index=-1)
@@ -154,12 +151,14 @@ class PIDVersioning(PIDConceptOrdered):
                     self.draft_child))
 
     def remove_draft_child(self):
+        """Remove the draft child from versioning."""
         if self.draft_child:
             with db.session.begin_nested():
                 super(PIDVersioning, self).remove_child(self.draft_child,
                                                         reorder=True)
 
     def update_redirect(self):
+        """Update the parent redirect to the current last child."""
         if self.last_child:
             if self.parent.status == PIDStatus.RESERVED:
                 self.parent.register()

@@ -44,7 +44,7 @@ tests_require = [
 
 extras_require = {
     'docs': [
-        'Sphinx>=1.4.2',
+        'Sphinx>=1.5.1',
     ],
     'tests': tests_require,
     'mysql': [
@@ -78,6 +78,7 @@ setup_requires = [
 install_requires = [
     'Flask-BabelEx>=0.9.2',
     'invenio-pidstore>=1.0.0b1',
+    'invenio-rest[cors]>=1.0.0a10',
     'SQLAlchemy>=1.0.9',
     'marshmallow>=2.12.2',
     'six>=1.10',
@@ -135,8 +136,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Development Status :: 1 - Planning',
     ],
