@@ -49,8 +49,7 @@ class PIDRelation(db.Model, Timestamp):
     parent_id = db.Column(
         db.Integer,
         db.ForeignKey(PersistentIdentifier.id, onupdate="CASCADE",
-                      ondelete="CASCADE",
-                      name='fk_pidrelation_parent_pidstore_pid'),
+                      ondelete="CASCADE"),
         nullable=False,
         primary_key=True,
         )
@@ -59,8 +58,7 @@ class PIDRelation(db.Model, Timestamp):
     child_id = db.Column(
         db.Integer,
         db.ForeignKey(PersistentIdentifier.id, onupdate="CASCADE",
-                      ondelete="CASCADE",
-                      name='fk_pidrelation_parent_pidstore_pid'),
+                      ondelete="CASCADE"),
         nullable=False,
         primary_key=True)
     """Child PID of the relation."""

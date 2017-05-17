@@ -117,19 +117,22 @@ def get_latest_draft(recid_pid):
     return pv.last_child, last_deposit
 
 
-def index_siblings(pid, children=None, neighbors_eager=False, eager=False,
-                   with_deposits=True):
+def index_siblings(pid, include_pid=False, children=None,
+                   neighbors_eager=False, eager=False, with_deposits=True):
     """Send sibling records of the passed pid for indexing.
 
-    Note: Does not index the 'pid' itself, only zero or more siblings.
+    Note: By default does not index the 'pid' itself,
+          only zero or more siblings.
 
     :param pid: PID (recid) of whose siblings are to be indexed.
     :param children: Overrides children with a fixed list of PID.
         Children should contain the 'pid' itself if 'neighbors_eager' is to
         be used, otherwise the last child is treated as the only neighbor.
     :param eager: Index all siblings immediately.
+    :param include_pid: If True, will index also the provided 'pid'
+           (default:False).
     :param neighbors_eager: Index the neighboring PIDs w.r.t. 'pid'
-        immediately, and the rest with a bulk_index.
+        immediately, and the rest with a bulk_index (default: False)
     :param with_deposits: Reindex also corresponding record's deposits.
     """
     assert not (neighbors_eager and eager), \
@@ -147,7 +150,13 @@ def index_siblings(pid, children=None, neighbors_eager=False, eager=False,
     # If 'pid' is not in children, idx is the lenght of list, so 'left'
     # will be all children, and 'right' will be an empty list
     # [X X X] X [X X X]
-    left = children[:idx]
+
+    if include_pid:
+        # [X X X X] [X X X]  Includes pid to the 'left' set
+        left = children[:idx + 1]
+    else:
+        # [X X X] X [X X X]
+        left = children[:idx]
     right = children[idx + 1:]
 
     if eager:
