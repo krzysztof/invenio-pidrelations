@@ -60,3 +60,15 @@ script:
 
 after_success:
   - coveralls
+
+deploy:
+  provider: pypi
+  user: inveniosoftware
+  password:
+    secure: "H1OevAFRKjXhhj2NZO71aB5NtyLv3D048BVRJ9e9bHNL+umrMCV5blu2C3QpRo6hJX8tZRB0feNxboCjYxoa+p1frtNdvPNAjuIfIWInf38+ho/KQxePhE1PYtPIfBAOusSdzJts8fRQmqRqH246TtOvAtHtfFLG7r5xsbaJINNIYxoquhQ0EihJkWUyPnXm/NkgMhB48ppUXKqm3Bis7AXTFZ5Iz1+1N/RW8ueoM0teupoS++yRFhVXlN3mSUAxiRtgejB76sqfgPaJnCIB67Tzf7cLVAi+/FhQl6xdUmxHy2BIZoLB22kU69B1dJJMvMdMzxbDdrcSVpwrHj4b59M4bzFRMj0UwM4nO0+omKChb62lGKiX/L2Bk9pw/boxG9ZkrECHtT7p7H6s1pMBhMLYozbD652flfG06/gokXP5N4b0mjdPzH0B2AVC1ojZFmY8mpeZlRU+LLhANRUwobmqcvDD0Y49BtPtHD4I4XWHSppabMtJhI3SGQKfa3ZPFsKuWEGNDr1lNu9rDG1y1/F/t7uURKQVah5Me7+yjE+gAYR4gs/bjlVMyiE/oKmtNOY3+uOTTNZOC8jl0FHml68GD3SV/nVPmxeFS+yx0qP3bYzewMJtR6E0dY8mcK2J2jc4Z7Kr1AL7TbjVe8FWGVadBRj+CheWK8JvN5eFd1o="
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true
+    python: "2.7"
+    repo: inveniosoftware/invenio-pidrelations
+    condition: $DEPLOY = true
