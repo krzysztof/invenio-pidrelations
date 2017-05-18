@@ -37,7 +37,7 @@ cache:
 
 env:
   - REQUIREMENTS=lowest
-  - REQUIREMENTS=release
+  - REQUIREMENTS=release DEPLOY=true
   - REQUIREMENTS=devel
 
 python:
